@@ -2,7 +2,7 @@
 
 A real-time jazz practice partner: configure a soloist and backing band, trade choruses over a chord chart (with live MIDI input), and review solos with scale-degree and chord-tone analysis.
 
-Guests can jam without an account. Optional Supabase login stores a user profile only — session APIs stay anonymous for now.
+Guests can jam without an account. Optional Supabase login stores a user profile only, session APIs stay anonymous for now.
 
 ## Current status
 
@@ -116,7 +116,7 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173). Vite proxies `/soundfonts` to the backend.
 
-### 3. Supabase (optional — for login / signup)
+### 3. Supabase ( for login / signup)
 
 1. Create a Supabase project and enable Email auth.
 2. Run [`supabase/migrations/001_profiles.sql`](supabase/migrations/001_profiles.sql) in the SQL Editor.
