@@ -1,0 +1,25 @@
+{
+  "name": "backend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "npm run build --prefix ../shared && tsc && npm run copy-soundfonts",
+    "copy-soundfonts": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('src','soundfonts');const dst=path.join('dist','soundfonts');fs.mkdirSync(dst,{recursive:true});for(const f of fs.readdirSync(src)) fs.copyFileSync(path.join(src,f),path.join(dst,f));\"",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^24.12.3",
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.4",
+    "typescript": "~6.0.2"
+  }
+}

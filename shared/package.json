@@ -1,0 +1,16 @@
+{
+  "name": "@music-gen/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "exports": {
+    "./types": "./types/index.ts",
+    "./instruments/soundfontManifest": "./instruments/soundfontManifest.ts"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
+}
