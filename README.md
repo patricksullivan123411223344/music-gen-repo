@@ -119,7 +119,9 @@ Open [http://localhost:5173](http://localhost:5173). Vite proxies `/soundfonts` 
 ### 3. Supabase ( for login / signup)
 
 1. Create a Supabase project and enable Email auth.
-2. Run [`supabase/migrations/001_profiles.sql`](supabase/migrations/001_profiles.sql) in the SQL Editor.
+2. Run these migrations in order in the SQL Editor (or via `supabase db push`):
+   - [`supabase/migrations/001_profiles.sql`](supabase/migrations/001_profiles.sql) — profiles table + RLS + signup trigger
+   - [`supabase/migrations/002_harden_profiles.sql`](supabase/migrations/002_harden_profiles.sql) — column privileges, locked-down definer function, `updated_at` trigger
 3. In `frontend/`, create a `.env` (or `.env.local`) with:
 
 ```env
@@ -127,7 +129,9 @@ VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
 ```
 
-Use the **project root URL** only — do **not** append `/rest/v1/`. Restart Vite after changing env.
+Use the **anon** (public) key only in the frontend — never the **service_role** key (it bypasses RLS). Use the **project root URL** only — do **not** append `/rest/v1/`. Restart Vite after changing env.
+
+**Verify `002` (optional):** as a signed-in user, SELECT your own profile; confirm UPDATE on `display_name` works and UPDATE on `email` fails; confirm a new signup still creates a `profiles` row. Full checklist is at the top of `002_harden_profiles.sql`.
 
 Optional overrides:
 
