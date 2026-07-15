@@ -34,12 +34,21 @@ export default function SoloAnalysisView({
     );
   }
 
+  const motionRows = (analysis.rows ?? []).filter((r) => r.motion);
+  const scaleRows = (analysis.rows ?? []).slice(0, 12);
+
   return (
     <section className="solo-analysis">
       {chordChart && (
         <div className="solo-analysis__chord-strip">
           <ChordStrip chordChart={chordChart} />
         </div>
+      )}
+
+      {analysis.summary.phraseSummary && (
+        <p className="solo-analysis__phrase solo-analysis__phrase--lead">
+          {analysis.summary.phraseSummary}
+        </p>
       )}
 
       <div className="solo-analysis__summary">
@@ -99,6 +108,41 @@ export default function SoloAnalysisView({
           />
         )}
       </div>
+
+      {(scaleRows.length > 0 || motionRows.length > 0) && (
+        <div className="solo-analysis__theory">
+          <h2 className="solo-analysis__theory-heading">Theory detail</h2>
+          <div className="solo-analysis__depth">
+            {scaleRows.length > 0 && (
+              <div className="solo-analysis__depth-block">
+                <h3 className="solo-analysis__depth-title">Scale fit</h3>
+                <ul className="solo-analysis__depth-list">
+                  {scaleRows.map((row, i) => (
+                    <li key={`scale-${i}`}>
+                      <code>beat {row.beat.toFixed(1)}</code>{' '}
+                      {row.role} on {row.chord}
+                      {row.primaryScale ? ` · ${row.primaryScale}` : ''}
+                      {row.scaleFit ? ' · in scale' : ' · outside primary'}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {motionRows.length > 0 && (
+              <div className="solo-analysis__depth-block">
+                <h3 className="solo-analysis__depth-title">Motion</h3>
+                <ul className="solo-analysis__depth-list">
+                  {motionRows.map((row, i) => (
+                    <li key={`motion-${i}`}>
+                      <code>beat {row.beat.toFixed(1)}</code> {row.role} → {row.motion}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

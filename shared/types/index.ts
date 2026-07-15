@@ -13,6 +13,8 @@ export type SoloStyle = 'bebop' | 'lyrical' | 'outside';
 
 export type TurnOrder = 'player_first' | 'soloist_first';
 
+export type TradeMode = 'auto' | 'phrase' | 'chorus';
+
 export type BackingStyle =
   | 'bebop'
   | 'swing'
@@ -75,6 +77,9 @@ export interface AnalyzedNote extends MidiNoteEvent {
   scaleDegree: string;
   function: NoteFunction;
   chordAtBeat: ChordSymbol;
+  motion?: string;
+  scaleFit?: boolean;
+  primaryScale?: string;
 }
 
 export interface SoloAnalysis {
@@ -86,7 +91,20 @@ export interface SoloAnalysis {
     chordToneCount: number;
     colorToneCount: number;
     tensionToneCount: number;
+    phraseSummary?: string;
   };
+  /** Rich analysis rows for depth UI (optional for older stored sessions). */
+  rows?: Array<{
+    beat: number;
+    duration: number;
+    midi: number;
+    chord: string;
+    role: string;
+    category: string;
+    primaryScale: string;
+    scaleFit: boolean;
+    motion?: string;
+  }>;
 }
 
 export interface SessionConfig {
@@ -95,6 +113,7 @@ export interface SessionConfig {
   soloInstrument: SoloInstrument;
   soloStyle: SoloStyle;
   turnOrder: TurnOrder;
+  tradeMode?: TradeMode;
   backingStyle: BackingStyle;
   backingInstruments: BackingInstrument[];
 }
@@ -169,11 +188,14 @@ export interface FormClockTickMessage {
   clock: FormClock;
 }
 
+export type BandEnergyLevel = 'chill' | 'steady' | 'push';
+
 export interface BackingTrackReadyMessage {
   type: 'backing_track_ready';
   audioUrl: string;
   durationSeconds: number;
   parts: BackingTrackPart[];
+  energy?: BandEnergyLevel;
 }
 
 export interface BackingTrackPart {

@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import type { SessionConfig } from '../../types/index.ts';
+import ChordStrip from '../analysis/ChordStrip.tsx';
 import {
   backingInstrumentOptions,
   backingStyleOptions,
-  defaultChordChart,
-  formatChordChart,
+  chartPresetOptions,
+  matchChartPresetId,
   soloInstrumentOptions,
   soloStyleOptions,
+  tradeModeOptions,
   turnOrderOptions,
 } from '../../lib/sessionDefaults.ts';
 
@@ -39,56 +41,82 @@ export default function SessionSetupPanel({
     update('backingInstruments', next);
   }
 
+  const presetId = matchChartPresetId(config.chordChart);
+
   return (
     <section className={`session-setup${disabled ? ' session-setup--disabled' : ''}`}>
       <header className="session-setup__header">
         <h1>Session</h1>
-        <p>Tune, soloist, and backing — then start.</p>
+        <p>Pick a form, set the feel, then start trading.</p>
       </header>
 
-      <div className="session-setup__grid">
-        <fieldset className="session-field" disabled={disabled}>
-          <legend>Chord chart</legend>
-          <label className="session-field__label" htmlFor="chart-title">
-            Tune title
-          </label>
-          <input
-            id="chart-title"
-            className="session-input"
-            value={config.chordChart.title}
-            onChange={(e) =>
-              update('chordChart', { ...config.chordChart, title: e.target.value })
-            }
-            disabled={disabled}
-          />
-          <p className="session-field__hint">
-            Preview: <code>{formatChordChart(config.chordChart)}</code>
-          </p>
-          <button
-            type="button"
-            className="session-button session-button--ghost"
-            onClick={() => update('chordChart', defaultChordChart)}
-            disabled={disabled}
-          >
-            Reset to blues in F
-          </button>
-        </fieldset>
+      <div className="session-chart-hero">
+        <div className="session-chart-hero__controls">
+          <div className="session-chart-hero__field">
+            <label className="session-field__label" htmlFor="chart-preset">
+              Preset
+            </label>
+            <select
+              id="chart-preset"
+              className="session-select"
+              value={presetId}
+              onChange={(e) => {
+                const preset = chartPresetOptions.find((p) => p.value === e.target.value);
+                if (preset) update('chordChart', preset.chart);
+              }}
+              disabled={disabled}
+            >
+              {chartPresetOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="session-chart-hero__field session-chart-hero__field--grow">
+            <label className="session-field__label" htmlFor="chart-title">
+              Tune title
+            </label>
+            <input
+              id="chart-title"
+              className="session-input"
+              value={config.chordChart.title}
+              onChange={(e) =>
+                update('chordChart', { ...config.chordChart, title: e.target.value })
+              }
+              disabled={disabled}
+            />
+          </div>
+          <div className="session-chart-hero__field session-chart-hero__field--tempo">
+            <label className="session-field__label" htmlFor="tempo">
+              BPM
+            </label>
+            <input
+              id="tempo"
+              className="session-input session-input--narrow"
+              type="number"
+              min={40}
+              max={400}
+              value={config.tempoBpm}
+              onChange={(e) => update('tempoBpm', Number(e.target.value))}
+              disabled={disabled}
+            />
+          </div>
+        </div>
+        <div className="session-chart-hero__strip">
+          <ChordStrip chordChart={config.chordChart} />
+        </div>
+      </div>
 
+      <div className="session-setup__grid session-setup__grid--tri">
         <fieldset className="session-field" disabled={disabled}>
-          <legend>Tempo</legend>
-          <label className="session-field__label" htmlFor="tempo">
-            BPM
-          </label>
-          <input
-            id="tempo"
-            className="session-input session-input--narrow"
-            type="number"
-            min={40}
-            max={400}
-            value={config.tempoBpm}
-            onChange={(e) => update('tempoBpm', Number(e.target.value))}
-            disabled={disabled}
-          />
+          <legend>Tune</legend>
+          <p className="session-field__lede">
+            {config.chordChart.barCount} bars · {config.chordChart.beatsPerBar}/4
+          </p>
+          <p className="session-field__hint">
+            Form loops while you jam. Change preset above to swap the chart.
+          </p>
         </fieldset>
 
         <fieldset className="session-field" disabled={disabled}>
@@ -131,30 +159,55 @@ export default function SessionSetupPanel({
             ))}
           </select>
 
-          <label className="session-field__label" htmlFor="turn-order">
-            Who starts
-          </label>
-          <select
-            id="turn-order"
-            className="session-select"
-            value={config.turnOrder}
-            onChange={(e) =>
-              update('turnOrder', e.target.value as SessionConfig['turnOrder'])
-            }
-            disabled={disabled}
-          >
-            {turnOrderOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="session-trading">
+            <span className="session-trading__heading">Trading</span>
+            <div className="session-trading__row">
+              <label className="session-field__label" htmlFor="turn-order">
+                Who starts
+              </label>
+              <select
+                id="turn-order"
+                className="session-select"
+                value={config.turnOrder}
+                onChange={(e) =>
+                  update('turnOrder', e.target.value as SessionConfig['turnOrder'])
+                }
+                disabled={disabled}
+              >
+                {turnOrderOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="session-trading__row">
+              <label className="session-field__label" htmlFor="trade-mode">
+                Trade length
+              </label>
+              <select
+                id="trade-mode"
+                className="session-select"
+                value={config.tradeMode ?? 'auto'}
+                onChange={(e) =>
+                  update('tradeMode', e.target.value as SessionConfig['tradeMode'])
+                }
+                disabled={disabled}
+              >
+                {tradeModeOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
         </fieldset>
 
         <fieldset className="session-field" disabled={disabled}>
-          <legend>Backing track</legend>
+          <legend>Band</legend>
           <label className="session-field__label" htmlFor="backing-style">
-            Style
+            Feel
           </label>
           <select
             id="backing-style"
@@ -199,17 +252,14 @@ export default function SessionSetupPanel({
             <Link to="/settings#midi">Connect one in Settings</Link> to record your solos.
           </p>
         )}
-        {disabled ? (
-          <p className="session-setup__running">Session running…</p>
-        ) : (
-          <button
-            type="button"
-            className="session-button session-button--primary"
-            onClick={onStart}
-          >
-            Start session
-          </button>
-        )}
+        <button
+          type="button"
+          className="session-button session-button--primary"
+          onClick={onStart}
+          disabled={disabled}
+        >
+          Start session
+        </button>
       </footer>
     </section>
   );

@@ -4,13 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "tsx --test music/**/*.test.ts"
   },
   "exports": {
     "./types": "./types/index.ts",
-    "./instruments/soundfontManifest": "./instruments/soundfontManifest.ts"
+    "./instruments/soundfontManifest": "./instruments/soundfontManifest.ts",
+    "./music": "./music/index.ts"
   },
   "devDependencies": {
+    "tsx": "^4.19.4",
     "typescript": "~6.0.2"
   }
 }

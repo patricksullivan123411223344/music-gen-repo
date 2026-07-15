@@ -1,11 +1,20 @@
 import { useCallback, useRef } from 'react';
-import type { FormClock, MidiNoteEvent, SessionConfig, SessionPhase } from '../../types/index.ts';
+import type {
+  BandEnergyLevel,
+  FormClock,
+  MidiNoteEvent,
+  SessionConfig,
+  SessionPhase,
+} from '../../types/index.ts';
 import type { BackingTrackPart } from '../../types/index.ts';
 import AudioPlayback from '../audio/AudioPlayback.tsx';
 import BackingAudioPlayback from '../audio/BackingAudioPlayback.tsx';
+import ChordStrip from '../analysis/ChordStrip.tsx';
 import MidiActivityIndicator from '../midi/MidiActivityIndicator.tsx';
 import MidiInputHandler from '../midi/MidiInputHandler.tsx';
 import { instrumentSoundLabel } from '../../lib/midiPlayback.ts';
+import { tradeModeOptions } from '../../lib/sessionDefaults.ts';
+import BackingControls from './BackingControls.tsx';
 import FormClockDisplay from './FormClockDisplay.tsx';
 import TurnIndicator from './TurnIndicator.tsx';
 
@@ -14,9 +23,11 @@ interface JamStageProps {
   phase: SessionPhase;
   activePlayer: 'player' | 'soloist' | null;
   clock: FormClock;
+  chorusIndex: number;
   chorusStartMs: number | null;
   soloistNotes: MidiNoteEvent[] | null;
   backingParts: BackingTrackPart[] | null;
+  bandEnergy?: BandEnergyLevel | null;
   soundLoading?: boolean;
   soundError?: string | null;
   onSoundError?: (message: string) => void;
@@ -29,9 +40,11 @@ export default function JamStage({
   phase,
   activePlayer,
   clock,
+  chorusIndex,
   chorusStartMs,
   soloistNotes,
   backingParts,
+  bandEnergy = null,
   soundLoading = false,
   soundError = null,
   onSoundError,
@@ -44,6 +57,9 @@ export default function JamStage({
   const loopBeats = config.chordChart.barCount * config.chordChart.beatsPerBar;
   const soundLabel = instrumentSoundLabel(config.soloInstrument);
   const flushRef = useRef<(() => void) | null>(null);
+  const tradeLabel =
+    tradeModeOptions.find((o) => o.value === (config.tradeMode ?? 'auto'))?.label ??
+    'Auto';
 
   const handleChorusEnd = useCallback(() => {
     flushRef.current?.();
@@ -89,39 +105,50 @@ export default function JamStage({
         <div>
           <h1>{config.chordChart.title}</h1>
           <p className="jam-stage__subtitle">
-            {config.soloInstrument.replace('_', ' ')} · {config.soloStyle}
+            {config.soloInstrument.replace(/_/g, ' ')} · {config.soloStyle}
+            {' · '}Trade: {tradeLabel}
             {soundLoading ? ' · Loading sound…' : ` · ${soundLabel}`}
           </p>
         </div>
-        <TurnIndicator phase={phase} activePlayer={activePlayer} />
+        <div className="jam-stage__header-aside">
+          <span className="jam-stage__chorus">Chorus {chorusIndex + 1}</span>
+          <TurnIndicator phase={phase} activePlayer={activePlayer} />
+        </div>
       </header>
 
-      <FormClockDisplay clock={clock} />
+      <FormClockDisplay clock={clock} barCount={config.chordChart.barCount} />
+
+      <div className="jam-stage__chords">
+        <ChordStrip chordChart={config.chordChart} activeBar={clock.bar} />
+      </div>
+
+      <BackingControls config={config} energy={bandEnergy} />
 
       <MidiActivityIndicator active={isPlayerTurn && isJamActive} />
 
       <div className="jam-stage__main">
-        <div className="jam-stage__placeholder">
+        <div className="jam-stage__activity">
           {isSoloistPlaying ? (
             <>
-              <p>Soloist is playing…</p>
+              <p className="jam-stage__activity-title">Soloist is answering</p>
               <p className="jam-stage__hint">
                 {soloistNotes!.length} notes · {soundLabel}
               </p>
             </>
           ) : isPlayerTurn ? (
             <>
-              <p>Your turn — play your chorus on MIDI.</p>
+              <p className="jam-stage__activity-title">Your chorus — play on MIDI</p>
               <p className="jam-stage__hint">
-                Notes are recorded when you play; stop the session to analyze.
+                Follow the highlighted bar. Notes stream live; the form flips at the next
+                chorus.
               </p>
             </>
           ) : (
             <>
-              <p>Waiting for soloist…</p>
+              <p className="jam-stage__activity-title">Waiting for soloist…</p>
               <p className="jam-stage__hint">
                 {backingParts?.length
-                  ? 'Backing track playing (SF2)'
+                  ? 'Backing track playing'
                   : 'Backing track loading…'}
               </p>
             </>

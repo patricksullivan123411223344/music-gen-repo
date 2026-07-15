@@ -204,6 +204,13 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg);
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.chord-strip__cell--active {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  transform: translateY(-1px);
 }
 
 .chord-strip__bar {
@@ -345,6 +352,71 @@
   overflow: auto;
   min-height: 360px;
   max-height: 560px;
+}
+
+.solo-analysis__phrase {
+  margin: 0;
+  padding: 10px 16px 0;
+  font-size: 14px;
+  color: var(--text-h);
+  line-height: 1.4;
+}
+
+.solo-analysis__phrase--lead {
+  padding: 16px 18px 4px;
+  font-size: clamp(17px, 2.2vw, 21px);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.solo-analysis__theory {
+  border-top: 1px solid var(--border);
+  padding: 18px 18px 20px;
+}
+
+.solo-analysis__theory-heading {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-h);
+}
+
+.solo-analysis__depth {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  border-top: none;
+}
+
+@media (min-width: 720px) {
+  .solo-analysis__depth {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.solo-analysis__depth-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.solo-analysis__depth-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--text-h);
+  line-height: 1.55;
+}
+
+.solo-analysis__depth-list code {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
 }
 
 .solo-analysis__empty-state {

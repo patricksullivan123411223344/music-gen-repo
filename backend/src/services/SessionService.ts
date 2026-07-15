@@ -59,6 +59,42 @@ export class SessionService {
     return updated;
   }
 
+  updateClock(
+    id: string,
+    formClock: FormClock,
+    currentChorus: number,
+  ): SessionResponse | undefined {
+    const session = this.sessions.get(id);
+    if (!session) return undefined;
+    const updated: SessionResponse = {
+      ...session,
+      formClock,
+      currentChorus,
+    };
+    this.sessions.set(id, updated);
+    return updated;
+  }
+
+  setTurn(
+    id: string,
+    phase: SessionPhase,
+    activePlayer: 'player' | 'soloist',
+    currentChorus: number,
+  ): SessionResponse {
+    const session = this.sessions.get(id);
+    if (!session) {
+      throw new Error('SESSION_NOT_FOUND');
+    }
+    const updated: SessionResponse = {
+      ...session,
+      phase,
+      activePlayer,
+      currentChorus,
+    };
+    this.sessions.set(id, updated);
+    return updated;
+  }
+
   getSoloistNotes(id: string): MidiNoteEvent[] {
     return this.soloistNotes.get(id) ?? [];
   }
@@ -77,6 +113,10 @@ export class SessionService {
     this.playerNotes.set(id, [...existing, ...notes]);
   }
 
+  clearPlayerNotes(id: string) {
+    this.playerNotes.set(id, []);
+  }
+
   stop(id: string): SessionResponse {
     const session = this.sessions.get(id);
     if (!session) {
@@ -90,6 +130,12 @@ export class SessionService {
     };
     this.sessions.set(id, updated);
     return updated;
+  }
+
+  delete(id: string) {
+    this.sessions.delete(id);
+    this.soloistNotes.delete(id);
+    this.playerNotes.delete(id);
   }
 }
 

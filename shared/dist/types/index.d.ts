@@ -4,6 +4,7 @@
 export type SoloInstrument = 'trumpet' | 'alto_sax' | 'tenor_sax' | 'piano' | 'guitar';
 export type SoloStyle = 'bebop' | 'lyrical' | 'outside';
 export type TurnOrder = 'player_first' | 'soloist_first';
+export type TradeMode = 'auto' | 'phrase' | 'chorus';
 export type BackingStyle = 'bebop' | 'swing' | 'latin' | 'bossa_nova' | 'straight';
 export type BackingInstrument = 'upright_bass' | 'drums' | 'piano' | 'guitar' | 'vibraphone';
 export type BackingInstrumentRole = 'rhythm' | 'comping';
@@ -40,6 +41,9 @@ export interface AnalyzedNote extends MidiNoteEvent {
     scaleDegree: string;
     function: NoteFunction;
     chordAtBeat: ChordSymbol;
+    motion?: string;
+    scaleFit?: boolean;
+    primaryScale?: string;
 }
 export interface SoloAnalysis {
     sessionId: string;
@@ -50,7 +54,20 @@ export interface SoloAnalysis {
         chordToneCount: number;
         colorToneCount: number;
         tensionToneCount: number;
+        phraseSummary?: string;
     };
+    /** Rich analysis rows for depth UI (optional for older stored sessions). */
+    rows?: Array<{
+        beat: number;
+        duration: number;
+        midi: number;
+        chord: string;
+        role: string;
+        category: string;
+        primaryScale: string;
+        scaleFit: boolean;
+        motion?: string;
+    }>;
 }
 export interface SessionConfig {
     chordChart: ChordChart;
@@ -58,6 +75,7 @@ export interface SessionConfig {
     soloInstrument: SoloInstrument;
     soloStyle: SoloStyle;
     turnOrder: TurnOrder;
+    tradeMode?: TradeMode;
     backingStyle: BackingStyle;
     backingInstruments: BackingInstrument[];
 }
@@ -103,11 +121,13 @@ export interface FormClockTickMessage {
     type: 'form_clock_tick';
     clock: FormClock;
 }
+export type BandEnergyLevel = 'chill' | 'steady' | 'push';
 export interface BackingTrackReadyMessage {
     type: 'backing_track_ready';
     audioUrl: string;
     durationSeconds: number;
     parts: BackingTrackPart[];
+    energy?: BandEnergyLevel;
 }
 export interface BackingTrackPart {
     instrument: BackingInstrument;

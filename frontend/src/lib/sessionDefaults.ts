@@ -6,28 +6,12 @@ import type {
   SessionConfig,
   SoloInstrument,
   SoloStyle,
+  TradeMode,
   TurnOrder,
 } from '../types/index.ts';
+import { chartPresets } from '@shared/music/index.ts';
 
-export const defaultChordChart: ChordChart = {
-  title: 'Blues in F',
-  beatsPerBar: 4,
-  barCount: 12,
-  bars: [
-    { bar: 1, chords: ['F7'], section: 'A' },
-    { bar: 2, chords: ['F7'] },
-    { bar: 3, chords: ['F7'] },
-    { bar: 4, chords: ['F7'] },
-    { bar: 5, chords: ['Bb7'] },
-    { bar: 6, chords: ['Bb7'] },
-    { bar: 7, chords: ['F7'] },
-    { bar: 8, chords: ['F7'] },
-    { bar: 9, chords: ['C7'] },
-    { bar: 10, chords: ['Bb7'] },
-    { bar: 11, chords: ['F7'] },
-    { bar: 12, chords: ['C7'] },
-  ],
-};
+export const defaultChordChart: ChordChart = chartPresets[0].chart;
 
 export const defaultSessionConfig: SessionConfig = {
   chordChart: defaultChordChart,
@@ -35,9 +19,16 @@ export const defaultSessionConfig: SessionConfig = {
   soloInstrument: 'tenor_sax',
   soloStyle: 'bebop',
   turnOrder: 'soloist_first',
+  tradeMode: 'auto',
   backingStyle: 'swing',
   backingInstruments: ['upright_bass', 'drums', 'piano'],
 };
+
+export const chartPresetOptions = chartPresets.map((p) => ({
+  value: p.id,
+  label: p.label,
+  chart: p.chart,
+}));
 
 export const soloInstrumentOptions: { value: SoloInstrument; label: string }[] = [
   { value: 'trumpet', label: 'Trumpet' },
@@ -56,6 +47,12 @@ export const soloStyleOptions: { value: SoloStyle; label: string }[] = [
 export const turnOrderOptions: { value: TurnOrder; label: string }[] = [
   { value: 'soloist_first', label: 'Soloist starts' },
   { value: 'player_first', label: 'Player starts' },
+];
+
+export const tradeModeOptions: { value: TradeMode; label: string }[] = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'phrase', label: 'Phrase' },
+  { value: 'chorus', label: 'Chorus' },
 ];
 
 export const backingStyleOptions: { value: BackingStyle; label: string }[] = [
@@ -82,4 +79,14 @@ export function formatChordChart(chart: ChordChart): string {
   return chart.bars
     .map((bar: ChordBar) => `| ${bar.chords.join(' ')}`)
     .join(' ');
+}
+
+export function matchChartPresetId(chart: ChordChart): string {
+  const found = chartPresets.find(
+    (p) =>
+      p.chart.title === chart.title &&
+      p.chart.barCount === chart.barCount &&
+      JSON.stringify(p.chart.bars) === JSON.stringify(chart.bars),
+  );
+  return found?.id ?? chartPresets[0].id;
 }

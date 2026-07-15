@@ -6,6 +6,7 @@ import { useMidi } from '../context/MidiProvider.tsx';
 import { useSession } from '../hooks/useSession.ts';
 import { defaultSessionConfig } from '../lib/sessionDefaults.ts';
 import '../css/session.css';
+import '../css/analysis.css';
 
 const idleClock: FormClock = {
   bar: 1,
@@ -20,13 +21,14 @@ export default function SessionPage() {
   const [isJamming, setIsJamming] = useState(false);
   const [phase, setPhase] = useState<SessionPhase>('idle');
   const [activePlayer, setActivePlayer] = useState<'player' | 'soloist' | null>(null);
-  const [clock, setClock] = useState<FormClock>(idleClock);
+  const [clientClock, setClientClock] = useState<FormClock>(idleClock);
   const [chorusStartMs, setChorusStartMs] = useState<number | null>(null);
   const { connectionStatus } = useMidi();
   const {
     session,
     soloistNotes,
     backingParts,
+    bandEnergy,
     error,
     soundError,
     soundLoading,
@@ -35,6 +37,9 @@ export default function SessionPage() {
     start,
     endSession,
   } = useSession();
+
+  // Prefer server form clock when jamming; fall back to client ticks for smooth UI
+  const clock = session?.formClock ?? clientClock;
 
   useEffect(() => {
     if (session) {
@@ -54,7 +59,8 @@ export default function SessionPage() {
 
     const beatMs = 60_000 / config.tempoBpm;
     const interval = window.setInterval(() => {
-      setClock((prev) => {
+      setClientClock((prev) => {
+        // If server clock is ahead / authoritative, keep client in soft sync for MIDI timing
         const beatsPerBar = config.chordChart.beatsPerBar;
         const barCount = config.chordChart.barCount;
         const nextBeatInBar = prev.beatInBar >= beatsPerBar ? 1 : prev.beatInBar + 1;
@@ -78,6 +84,13 @@ export default function SessionPage() {
     return () => window.clearInterval(interval);
   }, [isJamming, phase, config.tempoBpm, config.chordChart.beatsPerBar, config.chordChart.barCount]);
 
+  // Soft-follow server clock so bar highlight tracks chorus flips
+  useEffect(() => {
+    if (session?.formClock && isJamming) {
+      setClientClock(session.formClock);
+    }
+  }, [session?.formClock, isJamming]);
+
   const handleMidiNotesComplete = useCallback(
     (notes: MidiNoteEvent[]) => {
       sendMidiInput(notes);
@@ -87,7 +100,7 @@ export default function SessionPage() {
 
   async function handleStart() {
     setIsJamming(true);
-    setClock(idleClock);
+    setClientClock(idleClock);
     try {
       await start(config);
     } catch (err) {
@@ -102,52 +115,56 @@ export default function SessionPage() {
     setPhase('analysis');
     setActivePlayer(null);
     setChorusStartMs(null);
-    setClock(idleClock);
+    setClientClock(idleClock);
   }
 
   const midiDisconnected =
     connectionStatus === 'disconnected' || connectionStatus === 'error';
 
   return (
-    <main className="session-page session-page--dashboard">
+    <main
+      className={`session-page session-page--dashboard${
+        isJamming ? ' session-page--jamming' : ' session-page--idle'
+      }`}
+    >
       {error && <p className="session-error session-dashboard__error">{error}</p>}
 
-      <aside className="session-dashboard__config">
-        <SessionSetupPanel
-          config={config}
-          onChange={setConfig}
-          onStart={handleStart}
-          midiDisconnected={midiDisconnected}
-          disabled={isJamming}
-        />
-      </aside>
-
-      <section className="session-dashboard__stage">
-        {isJamming ? (
+      {!isJamming ? (
+        <div className="session-dashboard__setup">
+          <SessionSetupPanel
+            config={config}
+            onChange={setConfig}
+            onStart={handleStart}
+            midiDisconnected={midiDisconnected}
+          />
+        </div>
+      ) : (
+        <section className="session-dashboard__stage session-dashboard__stage--full">
+          <div className="session-jam-strip">
+            <div className="session-jam-strip__meta">
+              <strong>{config.chordChart.title}</strong>
+              <span>{config.tempoBpm} BPM</span>
+              <span>Stop to change setup</span>
+            </div>
+          </div>
           <JamStage
             config={config}
             phase={phase}
             activePlayer={activePlayer}
             clock={clock}
+            chorusIndex={session?.currentChorus ?? 0}
             chorusStartMs={chorusStartMs}
             soloistNotes={soloistNotes}
             backingParts={backingParts}
+            bandEnergy={bandEnergy}
             soundLoading={soundLoading}
             soundError={soundError}
             onSoundError={reportSoundError}
             onMidiNotesComplete={handleMidiNotesComplete}
             onStop={handleStop}
           />
-        ) : (
-          <div className="session-dashboard__idle">
-            <p className="session-dashboard__idle-title">Ready to jam</p>
-            <p className="session-dashboard__idle-hint">
-              Configure your session on the left, then start to hear the soloist and
-              backing here.
-            </p>
-          </div>
-        )}
-      </section>
+        </section>
+      )}
     </main>
   );
 }

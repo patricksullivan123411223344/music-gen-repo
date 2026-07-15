@@ -21,8 +21,16 @@ export default function TurnIndicator({ phase, activePlayer }: TurnIndicatorProp
         ? 'Soloist turn'
         : phaseLabels[phase];
 
+  const tone =
+    activePlayer === 'player'
+      ? 'player'
+      : activePlayer === 'soloist'
+        ? 'soloist'
+        : 'neutral';
+
   return (
-    <div className={`turn-indicator turn-indicator--${phase}`}>
+    <div className={`turn-indicator turn-indicator--${tone} turn-indicator--${phase}`}>
+      <span className="turn-indicator__dot" aria-hidden />
       <span className="turn-indicator__label">{label}</span>
     </div>
   );

@@ -6,6 +6,7 @@ import { stopAll } from '../lib/soundfontEngine.ts';
 import { saveLastSession } from '../lib/lastSessionStore.ts';
 import type {
   BackingTrackPart,
+  BandEnergyLevel,
   MidiNoteEvent,
   SessionConfig,
   SessionResponse,
@@ -16,6 +17,7 @@ export function useSession() {
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [soloistNotes, setSoloistNotes] = useState<MidiNoteEvent[] | null>(null);
   const [backingParts, setBackingParts] = useState<BackingTrackPart[] | null>(null);
+  const [bandEnergy, setBandEnergy] = useState<BandEnergyLevel | null>(null);
   const [analysis, setAnalysis] = useState<SoloAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [soundError, setSoundError] = useState<string | null>(null);
@@ -28,6 +30,7 @@ export function useSession() {
     setSoundError(null);
     setSoloistNotes(null);
     setBackingParts(null);
+    setBandEnergy(null);
     setAnalysis(null);
     analysisRef.current = null;
 
@@ -56,6 +59,7 @@ export function useSession() {
       }
       if (message.type === 'backing_track_ready') {
         setBackingParts(message.parts);
+        if (message.energy) setBandEnergy(message.energy);
       }
       if (message.type === 'soloist_midi_out') {
         setSoloistNotes(message.notes);
@@ -111,6 +115,7 @@ export function useSession() {
       setSession(null);
       setSoloistNotes(null);
       setBackingParts(null);
+      setBandEnergy(null);
       setSoundError(null);
     }
   }, [session]);
@@ -128,6 +133,7 @@ export function useSession() {
     session,
     soloistNotes,
     backingParts,
+    bandEnergy,
     analysis,
     error,
     soundError,

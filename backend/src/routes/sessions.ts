@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { CreateSessionRequest } from '../../../shared/types/index.js';
 import { analysisService } from '../services/AnalysisService.js';
 import { generateBackingTrack } from '../services/BackingTrackService.js';
+import { formClockService } from '../services/FormClockService.js';
 import { soloistService } from '../services/SoloistService.js';
 import { sessionService } from '../services/SessionService.js';
 import {
@@ -34,14 +35,16 @@ sessionsRouter.post('/sessions/:id/start', (req, res) => {
     const session = sessionService.start(id);
     sendSessionState(id, session);
 
-    const backing = generateBackingTrack(session.config);
+    const backing = generateBackingTrack(session.config, 'steady');
     sendBackingTrackReady(id, backing);
 
     if (session.config.turnOrder === 'soloist_first') {
-      const notes = soloistService.generate(session.config, session.currentChorus);
+      const notes = soloistService.generate(session.config, session.currentChorus, id, []);
       sessionService.setSoloistNotes(id, notes);
       sendSoloistMidi(id, session.currentChorus, notes);
     }
+
+    formClockService.start(id);
 
     res.json(session);
   } catch {
@@ -56,6 +59,7 @@ sessionsRouter.post('/sessions/:id/stop', (req, res) => {
   const { id } = req.params;
 
   try {
+    formClockService.stop(id);
     const session = sessionService.stop(id);
     const soloistNotes = sessionService.getSoloistNotes(id);
     const playerNotes = sessionService.getPlayerNotes(id);
@@ -80,6 +84,7 @@ sessionsRouter.post('/sessions/:id/stop', (req, res) => {
       sendSoloAnalysisReady(id, analysis);
     }
 
+    soloistService.clear(id);
     sendSessionState(id, session);
     res.json(session);
   } catch {

@@ -1,0 +1,1 @@
+{"version":3,"file":"quantize.d.ts","sourceRoot":"","sources":["../../music/quantize.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,aAAa,EAAE,MAAM,mBAAmB,CAAC;AAEvD,MAAM,MAAM,YAAY,GAAG,MAAM,GAAG,QAAQ,GAAG,WAAW,GAAG,SAAS,GAAG,OAAO,CAAC;AA4BjF,wBAAgB,aAAa,CAC3B,KAAK,EAAE,aAAa,EAAE,EACtB,IAAI,EAAE,YAAY,GACjB,aAAa,EAAE,CAYjB"}
