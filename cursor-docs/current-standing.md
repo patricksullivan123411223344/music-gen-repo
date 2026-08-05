@@ -1,25 +1,24 @@
 # Current standing — Jazz Gen
 
-Snapshot of what the repo actually does today (as of 2026-07-20). Prefer this document and live code over older README / `cursor-docs` claims where they disagree.
+> **Superseded for standing.** Use the root [README.md](../README.md) (August 2026). This file is a July 2026 snapshot from before the Max OSC/UDP sidecar.
 
 ---
 
 ## One-sentence summary
 
-A Vite/React + Express jam app with optional Supabase profiles, real Web MIDI + SF2 playback, and a shared TypeScript music library that drives procedural soloist lines, motif trades, theory analysis, backing parts, and server-side form/turn timing — still in-memory and anonymous on the session API, not ML-backed.
+A Vite/React + Express jam app with real Web MIDI + SF2 playback, and a shared TypeScript music library that drives procedural soloist lines, motif trades, theory analysis, backing parts, and server-side form/turn timing — still in-memory and anonymous on the session API, not ML-backed.
 
 ---
 
 ## Monorepo layout
 
-No root workspace package. Three Node packages + SQL + docs:
+No root workspace package. Three Node packages + docs:
 
 ```
 music_gen_app/
 ├── frontend/          # Vite, React 19, React Router (:5173)
 ├── backend/           # Express + ws (:3001)
 ├── shared/            # @music-gen/shared — types, music engines, SF2 map
-├── supabase/          # SQL migrations (profiles + RLS harden)
 ├── cursor-docs/       # Design notes / contracts / musical catalog
 ├── README.md
 └── current-standing.md
@@ -27,10 +26,9 @@ music_gen_app/
 
 | Package | Role |
 |---------|------|
-| **frontend** | Session / Analysis / Settings / Auth UI; Web MIDI; FluidSynth + oscillators |
+| **frontend** | Session / Analysis / Settings UI; Web MIDI; FluidSynth + oscillators |
 | **backend** | REST + WebSocket session orchestration; static `/soundfonts` |
 | **shared** | Canonical types, `soundfontManifest`, pure `music/` generators |
-| **supabase** | `profiles` table + RLS; applied manually in SQL Editor |
 
 ---
 
@@ -50,8 +48,6 @@ music_gen_app/
 | Web MIDI capture | Chrome / Edge → timed notes → WS |
 | SF2 playback | Trumpet, piano, guitar, bass/comp/drums kits |
 | Last-session analysis | `localStorage` → `/analysis` |
-| Supabase email auth + profiles | Frontend-only; does not gate jam |
-| Profiles RLS harden | Migrations `001` + `002` |
 
 ### Still placeholder / unused
 
@@ -60,7 +56,7 @@ music_gen_app/
 | Alto / tenor sax | Triangle oscillator (`engine: 'oscillator'`) |
 | `MlInferenceClient` | Empty stub file |
 | Canned `midiResponses` | File remains; live soloist path does **not** use it |
-| Settings “Soloist defaults” / “Account” | “Soon” UI |
+| Settings “Soloist defaults” / “Local presets” | “Soon” UI |
 | Session / analysis history | One last session only |
 | API JWT / user-owned sessions | Not wired |
 | WS `config_update` / turn-request messages | Typed, not handled |
@@ -85,7 +81,6 @@ flowchart TB
     Setup[SessionSetupPanel idle]
     Stage[JamStage live]
     AnalysisUI[SoloAnalysisView]
-    Auth[AuthProvider]
     Midi[MidiProvider]
     Audio[soundfontEngine]
   end
@@ -103,7 +98,6 @@ flowchart TB
     SFMap[soundfontManifest]
   end
   subgraph data [data]
-    Supa[Supabase Auth + profiles]
     LS[localStorage last session]
     SF2[static SF2 files]
   end
@@ -112,7 +106,6 @@ flowchart TB
   Stage --> WS
   Stage --> Audio
   Audio --> SF2
-  Auth --> Supa
   Midi --> Stage
   REST --> Clock
   REST --> Solo
@@ -194,8 +187,7 @@ Session APIs are **anonymous** (no JWT). CORS locked to Vite localhost in typica
 |------|------|
 | `/` | Session (idle setup or full-bleed jam) |
 | `/analysis`, `/session/:id/analysis` | Last stopped session analysis |
-| `/settings` | MIDI (real); soloist/account placeholders |
-| `/login`, `/signup` | Supabase email/password |
+| `/settings` | MIDI (real); soloist / local-preset placeholders |
 
 ### Session idle
 
@@ -212,22 +204,7 @@ Session APIs are **anonymous** (no JWT). CORS locked to Vite localhost in typica
 
 - Chord strip → **phrase summary** (lead) → tone-count cards → notation / piano roll → **Theory detail** (scale fit + motion)
 
-### Auth
-
-Optional. Profile row from signup trigger; display name in nav. Does not unlock or scope jam data.
-
----
-
-## Auth / database
-
-| Item | Detail |
-|------|--------|
-| Table | `public.profiles` (`id` → `auth.users`, display_name, email, timestamps) |
-| `001_profiles.sql` | RLS select/update own; trigger-only insert via `handle_new_user` |
-| `002_harden_profiles.sql` | Column UPDATE privileges; definer execute lock; `updated_at` trigger |
-| Client key | Anon only (`VITE_SUPABASE_*`) — never service_role in frontend |
-
-No Postgres tables for sessions or analysis yet.
+No accounts. Analysis is last-stop only via `localStorage`. Future local SQL: [local-persistence.md](./local-persistence.md).
 
 ---
 
@@ -260,11 +237,8 @@ frontend/src/pages/SessionPage.tsx
 frontend/src/components/session/{SessionSetupPanel,JamStage,FormClockDisplay,TurnIndicator,BackingControls}.tsx
 frontend/src/components/analysis/*
 frontend/src/hooks/useSession.ts
-frontend/src/lib/{soundfontEngine,midiPlayback,sessionDefaults,lastSessionStore,supabaseClient}.ts
-frontend/src/context/{AuthProvider,MidiProvider}.tsx
-
-supabase/migrations/001_profiles.sql
-supabase/migrations/002_harden_profiles.sql
+frontend/src/lib/{soundfontEngine,midiPlayback,sessionDefaults,lastSessionStore}.ts
+frontend/src/context/MidiProvider.tsx
 ```
 
 ---
@@ -297,6 +271,5 @@ supabase/migrations/002_harden_profiles.sql
 
 1. `cd backend && npm install && npm run dev` → `:3001`
 2. `cd frontend && npm install && npm run dev` → `:5173`
-3. Optional: apply `001` then `002` in Supabase SQL Editor; set `frontend/.env` with project URL + **anon** key
 
 For music unit tests: `cd shared && npm test`.

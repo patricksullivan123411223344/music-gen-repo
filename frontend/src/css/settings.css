@@ -55,3 +55,20 @@
   color: var(--text);
   border: 1px solid var(--border);
 }
+
+.settings-row__badge--ok {
+  background: color-mix(in srgb, #0d5c63 18%, white);
+  color: #0d5c63;
+  border-color: #0d5c63;
+}
+
+.settings-card__lede {
+  margin: -8px 0 16px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.settings-card__lede code {
+  font-size: 12px;
+}

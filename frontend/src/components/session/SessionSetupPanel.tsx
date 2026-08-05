@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { SessionConfig } from '../../types/index.ts';
 import ChordStrip from '../analysis/ChordStrip.tsx';
@@ -18,6 +19,7 @@ interface SessionSetupPanelProps {
   onStart: () => void;
   midiDisconnected?: boolean;
   disabled?: boolean;
+  statusSlot?: ReactNode;
 }
 
 export default function SessionSetupPanel({
@@ -26,6 +28,7 @@ export default function SessionSetupPanel({
   onStart,
   midiDisconnected = false,
   disabled = false,
+  statusSlot,
 }: SessionSetupPanelProps) {
   function update<K extends keyof SessionConfig>(key: K, value: SessionConfig[K]) {
     if (disabled) return;
@@ -48,6 +51,7 @@ export default function SessionSetupPanel({
       <header className="session-setup__header">
         <h1>Session</h1>
         <p>Pick a form, set the feel, then start trading.</p>
+        {statusSlot}
       </header>
 
       <div className="session-chart-hero">

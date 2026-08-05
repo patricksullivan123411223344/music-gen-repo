@@ -33,6 +33,8 @@ interface JamStageProps {
   onSoundError?: (message: string) => void;
   onMidiNotesComplete: (notes: MidiNoteEvent[]) => void;
   onStop: () => void;
+  playSoloistSf2?: boolean;
+  playBackingSf2?: boolean;
 }
 
 export default function JamStage({
@@ -50,6 +52,8 @@ export default function JamStage({
   onSoundError,
   onMidiNotesComplete,
   onStop,
+  playSoloistSf2 = true,
+  playBackingSf2 = true,
 }: JamStageProps) {
   const isPlayerTurn = activePlayer === 'player';
   const isSoloistPlaying = activePlayer === 'soloist' && Boolean(soloistNotes?.length);
@@ -89,7 +93,7 @@ export default function JamStage({
         parts={backingParts}
         tempoBpm={config.tempoBpm}
         loopBeats={loopBeats}
-        play={isJamActive && Boolean(backingParts?.length)}
+        play={isJamActive && playBackingSf2 && Boolean(backingParts?.length)}
         onError={onSoundError}
       />
 
@@ -97,7 +101,7 @@ export default function JamStage({
         notes={soloistNotes}
         tempoBpm={config.tempoBpm}
         instrument={config.soloInstrument}
-        play={isSoloistPlaying}
+        play={isSoloistPlaying && playSoloistSf2}
         onError={onSoundError}
       />
 

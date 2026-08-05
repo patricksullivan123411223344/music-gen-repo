@@ -627,3 +627,29 @@
   background: rgba(229, 115, 115, 0.15);
   color: #e57373;
 }
+
+.max-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.max-status-strip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.max-status-strip__dot--on {
+  background: #0d5c63;
+}
+
+.max-status-strip__link {
+  margin-left: auto;
+  font-size: 12px;
+}

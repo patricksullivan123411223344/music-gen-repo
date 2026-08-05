@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FormClock, MidiNoteEvent, SessionConfig, SessionPhase } from '../types/index.ts';
 import JamStage from '../components/session/JamStage.tsx';
 import SessionSetupPanel from '../components/session/SessionSetupPanel.tsx';
+import MaxStatusStrip from '../components/max/MaxStatusStrip.tsx';
 import { useMidi } from '../context/MidiProvider.tsx';
 import { useSession } from '../hooks/useSession.ts';
+import {
+  applyMirrorToConfig,
+  mirrorFromConfig,
+  useMaxLink,
+} from '../hooks/useMaxLink.ts';
 import { defaultSessionConfig } from '../lib/sessionDefaults.ts';
 import '../css/session.css';
 import '../css/analysis.css';
@@ -24,6 +30,9 @@ export default function SessionPage() {
   const [clientClock, setClientClock] = useState<FormClock>(idleClock);
   const [chorusStartMs, setChorusStartMs] = useState<number | null>(null);
   const { connectionStatus } = useMidi();
+  const { envelope, pushMirror } = useMaxLink();
+  const skipMirrorPush = useRef(false);
+  const hydratedFromMax = useRef(false);
   const {
     session,
     soloistNotes,
@@ -47,6 +56,28 @@ export default function SessionPage() {
       setActivePlayer(session.activePlayer);
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!envelope) return;
+    const shouldApply =
+      !hydratedFromMax.current || envelope.source === 'max';
+    if (!shouldApply) return;
+    hydratedFromMax.current = true;
+    skipMirrorPush.current = true;
+    setConfig((prev) => applyMirrorToConfig(prev, envelope.sessionMirror));
+  }, [envelope]);
+
+  useEffect(() => {
+    if (!hydratedFromMax.current) return;
+    if (skipMirrorPush.current) {
+      skipMirrorPush.current = false;
+      return;
+    }
+    const handle = window.setTimeout(() => {
+      void pushMirror(mirrorFromConfig(config));
+    }, 150);
+    return () => window.clearTimeout(handle);
+  }, [config, pushMirror]);
 
   useEffect(() => {
     if (activePlayer === 'player' && isJamming) {
@@ -121,6 +152,13 @@ export default function SessionPage() {
   const midiDisconnected =
     connectionStatus === 'disconnected' || connectionStatus === 'error';
 
+  const renderMode = envelope?.maxLink.renderMode ?? 'sf2';
+  const sf2Preview = envelope?.maxLink.sf2Preview ?? true;
+  const playSoloistSf2 =
+    renderMode === 'sf2' || renderMode === 'max_band' || sf2Preview;
+  const playBackingSf2 =
+    renderMode === 'sf2' || renderMode === 'max_soloist' || sf2Preview;
+
   return (
     <main
       className={`session-page session-page--dashboard${
@@ -136,6 +174,7 @@ export default function SessionPage() {
             onChange={setConfig}
             onStart={handleStart}
             midiDisconnected={midiDisconnected}
+            statusSlot={<MaxStatusStrip envelope={envelope} />}
           />
         </div>
       ) : (
@@ -162,6 +201,8 @@ export default function SessionPage() {
             onSoundError={reportSoundError}
             onMidiNotesComplete={handleMidiNotesComplete}
             onStop={handleStop}
+            playSoloistSf2={playSoloistSf2}
+            playBackingSf2={playBackingSf2}
           />
         </section>
       )}

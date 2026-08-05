@@ -6,8 +6,13 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 import { sessionsRouter } from './routes/sessions.js';
 import { soundfontsRouter } from './routes/soundfonts.js';
+import { maxLinkRouter } from './routes/maxLink.js';
 import { sessionService } from './services/SessionService.js';
+import { maxLinkService } from './services/MaxLinkService.js';
+import { oscBridge } from './max/OscUdpBridge.js';
+import { handleOscInbound } from './max/oscInbound.js';
 import { registerConnection, sendSessionState } from './ws/sessionHandler.js';
+import { registerControlConnection, startControlFanout } from './ws/controlHandler.js';
 
 const PORT = Number(process.env.PORT) || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -16,6 +21,7 @@ const app = express();
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
 app.use('/api', sessionsRouter);
+app.use('/api', maxLinkRouter);
 app.use('/api/soundfonts', soundfontsRouter);
 app.use(
   '/soundfonts',
@@ -32,7 +38,14 @@ const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws, req) => {
-  const match = req.url?.match(/^\/ws\/sessions\/([^/?]+)/);
+  const url = req.url ?? '';
+
+  if (url.startsWith('/ws/control')) {
+    registerControlConnection(ws);
+    return;
+  }
+
+  const match = url.match(/^\/ws\/sessions\/([^/?]+)/);
   const sessionId = match?.[1];
 
   if (!sessionId) {
@@ -56,6 +69,13 @@ wss.on('connection', (ws, req) => {
   sendSessionState(sessionId, session);
 });
 
+oscBridge.onMessage(handleOscInbound);
+oscBridge.start();
+maxLinkService.start();
+startControlFanout();
+
 server.listen(PORT, () => {
+  const { sendPort, receivePort } = oscBridge.ports;
   console.log(`Backend listening on http://localhost:${PORT}`);
+  console.log(`Max OSC UDP → ${sendPort} (Max udpreceive)  ← ${receivePort} (Max udpsend)`);
 });

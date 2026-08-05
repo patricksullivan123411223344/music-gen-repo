@@ -106,6 +106,52 @@ export interface ConfigUpdateMessage {
     type: 'config_update';
     config: SessionConfig;
 }
+export type MaxRenderMode = 'sf2' | 'max_soloist' | 'max_band' | 'both';
+export type ConfigSyncSource = 'web' | 'max' | 'system';
+/** Musical setup mirrored to Max (no chord-strip / full chart). */
+export interface SessionConfigMirror {
+    tempoBpm: number;
+    soloInstrument: SoloInstrument;
+    soloStyle: SoloStyle;
+    turnOrder: TurnOrder;
+    tradeMode: TradeMode;
+    backingStyle: BackingStyle;
+    backingInstruments: BackingInstrument[];
+    presetId: string;
+    title: string;
+}
+export interface MaxLinkSettings {
+    host: string;
+    sendPort: number;
+    receivePort: number;
+    renderMode: MaxRenderMode;
+    sf2Preview: boolean;
+}
+export interface MaxLinkStatus {
+    connected: boolean;
+    lastError: string | null;
+    lastSeenAt: string | null;
+}
+export interface ConfigSyncEnvelope {
+    rev: number;
+    source: ConfigSyncSource;
+    sessionMirror: SessionConfigMirror;
+    maxLink: MaxLinkSettings;
+    status: MaxLinkStatus;
+}
+export type ControlServerMessage = {
+    type: 'max_config';
+    envelope: ConfigSyncEnvelope;
+} | {
+    type: 'max_status';
+    connected: boolean;
+    lastError?: string | null;
+};
+export type ControlClientMessage = {
+    type: 'max_config_set';
+    sessionMirror?: Partial<SessionConfigMirror>;
+    maxLink?: Partial<Pick<MaxLinkSettings, 'renderMode' | 'sf2Preview'>>;
+};
 export interface RequestSoloistTurnMessage {
     type: 'request_soloist_turn';
 }

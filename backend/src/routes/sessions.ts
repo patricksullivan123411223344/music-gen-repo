@@ -5,6 +5,7 @@ import { generateBackingTrack } from '../services/BackingTrackService.js';
 import { formClockService } from '../services/FormClockService.js';
 import { soloistService } from '../services/SoloistService.js';
 import { sessionService } from '../services/SessionService.js';
+import { maxLinkService } from '../services/MaxLinkService.js';
 import {
   sendBackingTrackReady,
   sendSessionState,
@@ -25,6 +26,7 @@ sessionsRouter.post('/sessions', (req, res) => {
   }
 
   const session = sessionService.create(body.config);
+  maxLinkService.activeSessionId = session.id;
   res.status(201).json(session);
 });
 
@@ -33,6 +35,7 @@ sessionsRouter.post('/sessions/:id/start', (req, res) => {
 
   try {
     const session = sessionService.start(id);
+    maxLinkService.activeSessionId = id;
     sendSessionState(id, session);
 
     const backing = generateBackingTrack(session.config, 'steady');
@@ -85,6 +88,9 @@ sessionsRouter.post('/sessions/:id/stop', (req, res) => {
     }
 
     soloistService.clear(id);
+    if (maxLinkService.activeSessionId === id) {
+      maxLinkService.activeSessionId = null;
+    }
     sendSessionState(id, session);
     res.json(session);
   } catch {

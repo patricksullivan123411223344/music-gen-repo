@@ -8,6 +8,7 @@ import type {
   SoloAnalysis,
 } from '../../../shared/types/index.js';
 import { sessionService } from '../services/SessionService.js';
+import { fanoutToOsc } from '../max/oscFanout.js';
 
 const connections = new Map<string, Set<WebSocket>>();
 
@@ -17,13 +18,17 @@ function send(ws: WebSocket, message: ServerMessage) {
   }
 }
 
+export function ingestMidiInput(sessionId: string, notes: MidiNoteEvent[]) {
+  const session = sessionService.get(sessionId);
+  if (!session || session.phase !== 'player_solo' || notes.length === 0) {
+    return;
+  }
+  sessionService.appendPlayerNotes(sessionId, notes);
+}
+
 function handleClientMessage(sessionId: string, message: ClientMessage) {
   if (message.type === 'midi_input') {
-    const session = sessionService.get(sessionId);
-    if (!session || session.phase !== 'player_solo') {
-      return;
-    }
-    sessionService.appendPlayerNotes(sessionId, message.notes);
+    ingestMidiInput(sessionId, message.notes);
   }
 }
 
@@ -59,10 +64,12 @@ export function registerConnection(sessionId: string, ws: WebSocket) {
 
 export function broadcast(sessionId: string, message: ServerMessage) {
   const set = connections.get(sessionId);
-  if (!set) return;
-  for (const ws of set) {
-    send(ws, message);
+  if (set) {
+    for (const ws of set) {
+      send(ws, message);
+    }
   }
+  fanoutToOsc(message);
 }
 
 export function sendSessionState(sessionId: string, session: SessionResponse) {
@@ -109,4 +116,4 @@ export function sendBackingTrackReady(
     energy,
   });
 }
-
+

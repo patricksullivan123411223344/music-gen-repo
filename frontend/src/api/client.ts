@@ -1,5 +1,8 @@
 import type {
+  ConfigSyncEnvelope,
   CreateSessionRequest,
+  MaxLinkSettings,
+  SessionConfigMirror,
   SessionResponse,
   SoloAnalysis,
 } from '../types/index.ts';
@@ -38,5 +41,19 @@ export const apiClient = {
 
   getAnalysis(id: string, chorusIndex: number): Promise<SoloAnalysis> {
     return request(`/api/sessions/${id}/analysis/${chorusIndex}`);
+  },
+
+  getMaxConfig(): Promise<ConfigSyncEnvelope> {
+    return request('/api/max/config');
+  },
+
+  putMaxConfig(body: {
+    sessionMirror?: Partial<SessionConfigMirror>;
+    maxLink?: Partial<Pick<MaxLinkSettings, 'renderMode' | 'sf2Preview'>>;
+  }): Promise<ConfigSyncEnvelope> {
+    return request('/api/max/config', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
   },
 };

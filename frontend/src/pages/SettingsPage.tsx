@@ -1,5 +1,7 @@
 import PageShell from '../components/layout/PageShell.tsx';
 import MidiSettingsSection from '../components/settings/MidiSettingsSection.tsx';
+import MaxConfigPanel from '../components/max/MaxConfigPanel.tsx';
+import { useMaxLink } from '../hooks/useMaxLink.ts';
 import '../css/settings.css';
 import '../css/midi.css';
 
@@ -9,19 +11,31 @@ const placeholderSections = [
     items: ['Preferred instrument', 'Default style', 'Turn order'],
   },
   {
-    title: 'Account',
-    items: ['Email notifications', 'Practice history retention'],
+    title: 'Local presets',
+    items: ['Named jam presets', 'Analysis history retention'],
   },
 ];
 
 export default function SettingsPage() {
+  const { envelope, pushMaxLink } = useMaxLink();
+
   return (
     <PageShell
       title="Settings"
-      subtitle="Configure audio, MIDI devices, and soloist preferences."
+      subtitle="Configure audio, MIDI devices, Max link, and soloist preferences."
     >
       <div className="settings-grid">
         <MidiSettingsSection />
+
+        <MaxConfigPanel
+          envelope={envelope}
+          onRenderMode={(renderMode) => {
+            void pushMaxLink({ renderMode });
+          }}
+          onSf2Preview={(sf2Preview) => {
+            void pushMaxLink({ sf2Preview });
+          }}
+        />
 
         {placeholderSections.map((section) => (
           <section key={section.title} className="settings-card">
