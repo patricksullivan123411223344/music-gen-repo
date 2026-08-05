@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jazz Gen x Max: Pipeline and Feature Possibilities</title>
+  <style>
+    @page {
+      size: Letter;
+      margin: 0.65in 0.75in;
+    }
+
+    :root {
+      --ink: #1a1f24;
+      --muted: #5a6570;
+      --rule: #d8dde3;
+      --accent: #0d5c63;
+      --accent-soft: #e6f3f4;
+      --surface: #f7f8fa;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      font-size: 10pt;
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 600;
+      line-height: 1.2;
+      color: var(--ink);
+    }
+
+    h1 {
+      font-size: 18pt;
+      margin: 0 0 0.15em;
+      letter-spacing: -0.02em;
+    }
+
+    .eyebrow {
+      font-size: 8pt;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 0.35em;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 9.5pt;
+      margin: 0 0 0.85em;
+      max-width: 40em;
+    }
+
+    h2 {
+      font-size: 12pt;
+      margin: 0.95em 0 0.4em;
+      padding-bottom: 0.2em;
+      border-bottom: 1.5px solid var(--accent);
+    }
+
+    h3 {
+      font-size: 10pt;
+      margin: 0.7em 0 0.25em;
+      color: var(--accent);
+    }
+
+    p { margin: 0.4em 0; }
+
+    .meta {
+      font-size: 8pt;
+      color: var(--muted);
+      border-top: 1px solid var(--rule);
+      padding-top: 0.45em;
+      margin-bottom: 0.85em;
+    }
+
+    .callout {
+      background: var(--accent-soft);
+      border-left: 3px solid var(--accent);
+      padding: 0.55em 0.75em;
+      margin: 0.65em 0;
+      border-radius: 0 3px 3px 0;
+      font-size: 9.5pt;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.5em 0 0.7em;
+      font-size: 8.5pt;
+    }
+
+    th, td {
+      border: 1px solid var(--rule);
+      padding: 0.32em 0.45em;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--surface);
+      font-weight: 600;
+      font-size: 7.5pt;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 8.5pt;
+      background: var(--surface);
+      padding: 0.05em 0.25em;
+      border-radius: 2px;
+    }
+
+    ul {
+      margin: 0.3em 0 0.55em;
+      padding-left: 1.2em;
+    }
+
+    li { margin: 0.18em 0; }
+
+    .diagram {
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 0.55em 0.7em;
+      margin: 0.5em 0;
+      background: var(--surface);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 7.5pt;
+      line-height: 1.35;
+      white-space: pre;
+    }
+
+    .diagram .title {
+      font-family: "Segoe UI", sans-serif;
+      font-size: 7.5pt;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.4em;
+      font-weight: 600;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45em 0.65em;
+      margin-top: 0.45em;
+    }
+
+    .feat {
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 0.45em 0.55em;
+      break-inside: avoid;
+    }
+
+    .feat h3 {
+      margin: 0 0 0.2em;
+      font-size: 9.5pt;
+    }
+
+    .feat p {
+      margin: 0;
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .page2 {
+      page-break-before: always;
+    }
+
+    footer {
+      margin-top: 0.9em;
+      padding-top: 0.4em;
+      border-top: 1px solid var(--rule);
+      font-size: 7.5pt;
+      color: var(--muted);
+    }
+
+    ol.flow {
+      margin: 0.35em 0 0.5em;
+      padding-left: 1.25em;
+    }
+
+    ol.flow li { margin: 0.2em 0; }
+  </style>
+</head>
+<body>
+
+  <div class="eyebrow">Jazz Gen x Cycling '74 Max</div>
+  <h1>Pipeline, Dataflow, and Feature Possibilities</h1>
+  <p class="subtitle">
+    How model and session output reaches Max as JSON MIDI events, becomes real sound,
+    and what that unlocks beside the web jam app.
+  </p>
+  <div class="meta">Two-page brief · July 2026 · Bidirectional peer on the existing session WebSocket</div>
+
+  <h2>1. Pipeline and dataflow</h2>
+
+  <div class="callout">
+    <strong>Core idea.</strong> Jazz Gen owns the jam (clock, turns, generation).
+    Output leaves the backend as JSON WebSocket messages of beat-timed MIDI notes.
+    Max (and/or the browser) turns those notes into sound. The web UI still shows
+    session state; Max is an extra performance and audio surface, not a replacement
+    for the app’s display unless you choose that.
+  </div>
+
+  <div class="diagram"><div class="title">End-to-end flow</div>Browser UI  ──REST──►  Backend (session + FormClock + Soloist/ML)
+    │                        │
+    │◄── WS fan-out ─────────┤  same /ws/sessions/:id
+    │   session_state        │
+    │   soloist_midi_out     ├──►  Max node.script (WS client)
+    │   backing_track_ready  │         │
+    ▼                        │         ▼ max-api
+  SF2 / Web MIDI             │    Max patch → synths / MIDI outs → sound
+                             │
+                             ◄── midi_input (live notes from Max or browser)</div>
+
+  <h3>What moves on the wire</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Message</th>
+        <th>Direction</th>
+        <th>Payload</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>soloist_midi_out</code></td>
+        <td>App → Max / browser</td>
+        <td>Final model or procedural line: list of notes (pitch, velocity, startBeat, durationBeats)</td>
+      </tr>
+      <tr>
+        <td><code>backing_track_ready</code></td>
+        <td>App → Max / browser</td>
+        <td>Bass, drums, comp as MIDI parts (+ optional band energy)</td>
+      </tr>
+      <tr>
+        <td><code>session_state</code></td>
+        <td>App → Max / browser</td>
+        <td>BPM, phase, chorus, form progress (shared clock)</td>
+      </tr>
+      <tr>
+        <td><code>midi_input</code></td>
+        <td>Max / browser → App</td>
+        <td>Live player notes into the session buffer (during player turns)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Step by step</h3>
+  <ol class="flow">
+    <li>User starts a jam in the browser. Backend creates a session and runs the form clock.</li>
+    <li>Max’s Node for Max script connects as a second client on <code>/ws/sessions/:id</code>.</li>
+    <li>At a soloist turn, SoloistService (or a future ML client) produces notes. The backend broadcasts <code>soloist_midi_out</code> as JSON.</li>
+    <li>Max unpacks the note list, schedules from beats + BPM, and plays real audio (or drives external MIDI gear).</li>
+    <li>The browser receives the same JSON and can preview with SF2 while showing the jam UI.</li>
+    <li>Live playing from Max or the browser returns as <code>midi_input</code> for trading and analysis.</li>
+  </ol>
+
+  <p>
+    <strong>Important:</strong> this is not PCM or WAV over the socket. The “final model output”
+    is structured MIDI event JSON. Sound is rendered where you choose (Max, browser, or both).
+    Generation today is usually a chorus-sized batch, so Max should schedule the phrase ahead,
+    not treat each packet as a live note-on stream.
+  </p>
+
+  <div class="page2">
+
+  <h2>2. Feature possibilities</h2>
+
+  <p>
+    Once the pipe exists, Max can sit beside Jazz Gen in several roles. The web app stays
+    the session brain; Max extends how the jam is heard, controlled, and staged.
+  </p>
+
+  <div class="features">
+    <div class="feat">
+      <h3>Custom soloist voice</h3>
+      <p>Play <code>soloist_midi_out</code> through Max synths, samples, or hardware while the browser keeps a simple preview.</p>
+    </div>
+    <div class="feat">
+      <h3>Hardware / studio input</h3>
+      <p>Keyboards, wind MIDI, and pedals in Max send <code>midi_input</code> into the same player buffer the trade engine already uses.</p>
+    </div>
+    <div class="feat">
+      <h3>Max as house band</h3>
+      <p>Use backing MIDI parts as a score. Replace or upgrade browser SF2 with Max bass, drums, and comp; map energy to dynamics.</p>
+    </div>
+    <div class="feat">
+      <h3>Show control and visuals</h3>
+      <p>Drive lights, video, or clip cues from phase, chorus, and BPM in <code>session_state</code> without Max needing jazz theory.</p>
+    </div>
+    <div class="feat">
+      <h3>Teaching lab</h3>
+      <p>Instructor Max patch mirrors turns and freezes phrases for slow playback while students jam in the browser.</p>
+    </div>
+    <div class="feat">
+      <h3>External / ML generator</h3>
+      <p>Later, Max or an ML host can produce the note list. Jazz Gen still clocks the session and fans JSON to the browser.</p>
+    </div>
+    <div class="feat">
+      <h3>DAW and multi-out routing</h3>
+      <p>Max sits between Jazz Gen and Ableton or outboard gear: separate soloist vs band channels, record stems, share clock.</p>
+    </div>
+    <div class="feat">
+      <h3>Dual surface jam</h3>
+      <p>One shared beat: web stage for setup and display, Max for performance audio and controllers.</p>
+    </div>
+  </div>
+
+  <h3>What stays true across features</h3>
+  <ul>
+    <li>Backend form clock remains master; Max follows <code>session_state</code>.</li>
+    <li>Currency is always beat-timed MIDI JSON, not audio blobs.</li>
+    <li>Same session id, same fan-out: browser and Max hear one jam.</li>
+  </ul>
+
+  <footer>
+    Jazz Gen · Max pipeline brief · Derived from the session WebSocket bus
+    (<code>/ws/sessions/:id</code>) and Node for Max as the Max-side client.
+  </footer>
+
+  </div>
+
+</body>
+</html>
