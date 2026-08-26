@@ -1,6 +1,6 @@
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import type { FormClock, MidiNoteEvent } from '../../types/index.ts';
-import { useMidi } from '../../context/MidiProvider.tsx';
+import { useMidi, type MidiActivity } from '../../context/MidiProvider.tsx';
 import { useMidiInput } from '../../hooks/useMidiInput.ts';
 
 interface MidiInputHandlerProps {
@@ -11,6 +11,7 @@ interface MidiInputHandlerProps {
   beatsPerBar: number;
   barCount: number;
   onNotesComplete: (notes: MidiNoteEvent[]) => void;
+  onLiveNote?: (activity: MidiActivity) => void;
   onChorusEnd?: () => void;
   flushRef?: MutableRefObject<(() => void) | null>;
 }
@@ -23,6 +24,7 @@ export default function MidiInputHandler({
   beatsPerBar,
   barCount,
   onNotesComplete,
+  onLiveNote,
   onChorusEnd,
   flushRef,
 }: MidiInputHandlerProps) {
@@ -48,7 +50,10 @@ export default function MidiInputHandler({
     setListening(shouldListen);
     if (shouldListen) {
       resetNoteCount();
-      registerNoteHandler(() => incrementNoteCount());
+      registerNoteHandler((activity) => {
+        incrementNoteCount();
+        onLiveNote?.(activity);
+      });
     } else {
       registerNoteHandler(null);
       flushBuffer();
@@ -65,6 +70,7 @@ export default function MidiInputHandler({
     incrementNoteCount,
     resetNoteCount,
     flushBuffer,
+    onLiveNote,
   ]);
 
   useEffect(() => {

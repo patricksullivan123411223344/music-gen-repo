@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type {
   BandEnergyLevel,
   FormClock,
@@ -7,6 +7,7 @@ import type {
   SessionPhase,
 } from '../../types/index.ts';
 import type { BackingTrackPart } from '../../types/index.ts';
+import type { MidiActivity } from '../../context/MidiProvider.tsx';
 import AudioPlayback from '../audio/AudioPlayback.tsx';
 import BackingAudioPlayback from '../audio/BackingAudioPlayback.tsx';
 import ChordStrip from '../analysis/ChordStrip.tsx';
@@ -16,6 +17,7 @@ import { instrumentSoundLabel } from '../../lib/midiPlayback.ts';
 import { tradeModeOptions } from '../../lib/sessionDefaults.ts';
 import BackingControls from './BackingControls.tsx';
 import FormClockDisplay from './FormClockDisplay.tsx';
+import LiveSessionViz, { type LiveMidiHit } from './LiveSessionViz.tsx';
 import TurnIndicator from './TurnIndicator.tsx';
 
 interface JamStageProps {
@@ -32,7 +34,6 @@ interface JamStageProps {
   soundError?: string | null;
   onSoundError?: (message: string) => void;
   onMidiNotesComplete: (notes: MidiNoteEvent[]) => void;
-  onStop: () => void;
   playSoloistSf2?: boolean;
   playBackingSf2?: boolean;
 }
@@ -51,7 +52,6 @@ export default function JamStage({
   soundError = null,
   onSoundError,
   onMidiNotesComplete,
-  onStop,
   playSoloistSf2 = true,
   playBackingSf2 = true,
 }: JamStageProps) {
@@ -61,12 +61,28 @@ export default function JamStage({
   const loopBeats = config.chordChart.barCount * config.chordChart.beatsPerBar;
   const soundLabel = instrumentSoundLabel(config.soloInstrument);
   const flushRef = useRef<(() => void) | null>(null);
+  const hitId = useRef(0);
+  const [liveHits, setLiveHits] = useState<LiveMidiHit[]>([]);
   const tradeLabel =
     tradeModeOptions.find((o) => o.value === (config.tradeMode ?? 'auto'))?.label ??
     'Auto';
 
   const handleChorusEnd = useCallback(() => {
     flushRef.current?.();
+  }, []);
+
+  const handleLiveNote = useCallback((activity: MidiActivity) => {
+    const id = ++hitId.current;
+    setLiveHits((prev) => {
+      const next = [
+        ...prev,
+        { id, pitch: activity.pitch, velocity: activity.velocity, born: performance.now() },
+      ];
+      return next.slice(-40);
+    });
+    window.setTimeout(() => {
+      setLiveHits((prev) => prev.filter((h) => h.id !== id));
+    }, 1300);
   }, []);
 
   return (
@@ -85,6 +101,7 @@ export default function JamStage({
         beatsPerBar={config.chordChart.beatsPerBar}
         barCount={config.chordChart.barCount}
         onNotesComplete={onMidiNotesComplete}
+        onLiveNote={handleLiveNote}
         onChorusEnd={handleChorusEnd}
         flushRef={flushRef}
       />
@@ -109,13 +126,17 @@ export default function JamStage({
         <div>
           <h1>{config.chordChart.title}</h1>
           <p className="jam-stage__subtitle">
-            {config.soloInstrument.replace(/_/g, ' ')} · {config.soloStyle}
-            {' · '}Trade: {tradeLabel}
-            {soundLoading ? ' · Loading sound…' : ` · ${soundLabel}`}
+            {isJamActive
+              ? `${config.soloInstrument.replace(/_/g, ' ')} · ${config.soloStyle} · Trade: ${tradeLabel}${
+                  soundLoading ? ' · Loading sound…' : ` · ${soundLabel}`
+                }`
+              : 'Live stage — clock, chords, and pitch lanes update when you start.'}
           </p>
         </div>
         <div className="jam-stage__header-aside">
-          <span className="jam-stage__chorus">Chorus {chorusIndex + 1}</span>
+          {isJamActive && (
+            <span className="jam-stage__chorus">Chorus {chorusIndex + 1}</span>
+          )}
           <TurnIndicator phase={phase} activePlayer={activePlayer} />
         </div>
       </header>
@@ -123,48 +144,24 @@ export default function JamStage({
       <FormClockDisplay clock={clock} barCount={config.chordChart.barCount} />
 
       <div className="jam-stage__chords">
-        <ChordStrip chordChart={config.chordChart} activeBar={clock.bar} />
+        <ChordStrip chordChart={config.chordChart} activeBar={isJamActive ? clock.bar : undefined} />
       </div>
 
-      <BackingControls config={config} energy={bandEnergy} />
+      <BackingControls config={config} energy={isJamActive ? bandEnergy : null} />
 
       <MidiActivityIndicator active={isPlayerTurn && isJamActive} />
 
       <div className="jam-stage__main">
-        <div className="jam-stage__activity">
-          {isSoloistPlaying ? (
-            <>
-              <p className="jam-stage__activity-title">Soloist is answering</p>
-              <p className="jam-stage__hint">
-                {soloistNotes!.length} notes · {soundLabel}
-              </p>
-            </>
-          ) : isPlayerTurn ? (
-            <>
-              <p className="jam-stage__activity-title">Your chorus — play on MIDI</p>
-              <p className="jam-stage__hint">
-                Follow the highlighted bar. Notes stream live; the form flips at the next
-                chorus.
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="jam-stage__activity-title">Waiting for soloist…</p>
-              <p className="jam-stage__hint">
-                {backingParts?.length
-                  ? 'Backing track playing'
-                  : 'Backing track loading…'}
-              </p>
-            </>
-          )}
-        </div>
+        <LiveSessionViz
+          config={config}
+          clock={clock}
+          soloistNotes={soloistNotes}
+          backingParts={backingParts}
+          activePlayer={activePlayer}
+          isJamming={isJamActive}
+          liveHits={liveHits}
+        />
       </div>
-
-      <footer className="jam-stage__footer">
-        <button type="button" className="session-button session-button--danger" onClick={onStop}>
-          Stop session
-        </button>
-      </footer>
     </section>
   );
 }

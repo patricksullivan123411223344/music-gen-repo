@@ -26,7 +26,7 @@ music_gen_app/
 
 | Package | Role |
 |---------|------|
-| **frontend** | Session / Analysis / Settings UI; Web MIDI; FluidSynth + oscillators |
+| **frontend** | Session / Analysis / Settings UI; Web MIDI; FluidSynth SF2 |
 | **backend** | REST + WebSocket session orchestration; static `/soundfonts` |
 | **shared** | Canonical types, `soundfontManifest`, pure `music/` generators |
 
@@ -46,14 +46,14 @@ music_gen_app/
 | Backing MIDI by feel | `buildBackingParts` + browser SF2 loop (`audioUrl` empty) |
 | Band energy refresh | After player→soloist chorus flip |
 | Web MIDI capture | Chrome / Edge → timed notes → WS |
-| SF2 playback | Trumpet, piano, guitar, bass/comp/drums kits |
+| SF2 playback | Trumpet, alto/tenor sax, piano, guitar, bass/comp/drums/vibes |
 | Last-session analysis | `localStorage` → `/analysis` |
 
 ### Still placeholder / unused
 
 | Area | Notes |
 |------|--------|
-| Alto / tenor sax | Triangle oscillator (`engine: 'oscillator'`) |
+| Alto sax SF2 | Juno-style dedicated bank; tenor is FreePats sampled sax |
 | `MlInferenceClient` | Empty stub file |
 | Canned `midiResponses` | File remains; live soloist path does **not** use it |
 | Settings “Soloist defaults” / “Local presets” | “Soon” UI |
@@ -67,7 +67,7 @@ music_gen_app/
 - FastAPI ML solo / analysis
 - Persist sessions + analysis per user
 - JWT-protect session APIs
-- Dedicated sax SF2s
+- Better acoustic alto sax samples
 - Chart text loaders, audio transcription, richer settings surface
 - Doc refresh so README Real-vs-stub matches this file
 
@@ -213,8 +213,7 @@ No accounts. Analysis is last-stop only via `localStorage`. Future local SQL: [l
 | Path | Detail |
 |------|--------|
 | Input | Web MIDI API → beat-timed `MidiNoteEvent[]` → WS |
-| Solo SF2 | Trumpet, piano, guitar via `js-synthesizer` worklet |
-| Sax | Oscillator fallback until SF2s land |
+| Solo SF2 | Trumpet, alto/tenor sax, piano, guitar via `js-synthesizer` worklet |
 | Backing | Loop scheduled MIDI parts on channels from manifest |
 | Assets | `backend/src/soundfonts/*.sf2`; Vite proxies `/soundfonts` |
 
@@ -250,7 +249,7 @@ frontend/src/context/MidiProvider.tsx
 1. No persisted jam history (one `localStorage` slot)
 2. No API auth / ownership on sessions
 3. No ML soloist or analysis
-4. Sax soundfonts missing
+4. Alto sax SF2 is Juno-style, not acoustic
 5. Mid-session config / manual turn WS messages unused
 6. Stop analysis prefers soloist notes if present, else player — not a multi-chorus review UI
 

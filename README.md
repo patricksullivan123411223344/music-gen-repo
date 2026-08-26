@@ -77,7 +77,7 @@ music-gen-repo/
 | Backend | Node 20+, Express, `ws`, `osc` (UDP), TypeScript (`tsx` in dev) |
 | Shared | Types, `soundfontManifest`, pure `music/` generators + tests |
 | Persistence | None hosted — one `localStorage` last session; local SQL later |
-| Browser audio | SF2 from `/soundfonts` via FluidSynth AudioWorklet; sax = oscillator fallback |
+| Browser audio | SF2 from `/soundfonts` via FluidSynth AudioWorklet (all solo + band instruments) |
 | Max (optional) | Stock Max `udpreceive` / `udpsend` — no Node for Max, no third-party packages |
 
 ### Dual transport
@@ -86,7 +86,7 @@ music-gen-repo/
 flowchart LR
   subgraph browser [Browser :5173]
     UI[Session Analysis Settings]
-    SF2[SF2 / oscillator preview]
+    SF2[SF2 preview]
     WebMIDI[Web MIDI]
   end
   subgraph backend [Backend :3001]
@@ -204,7 +204,7 @@ Snapshot of **what the repo actually does** (August 2026).
 | Backing MIDI by feel | Heuristic parts + real SF2 loop in the browser |
 | Band energy refresh | After some player → soloist flips |
 | Web MIDI capture | Chrome / Edge |
-| SF2 playback | Trumpet, piano, guitar, bass / comp / drums kits |
+| SF2 playback | Trumpet, alto/tenor sax, piano, guitar, bass / comp / drums / vibes |
 | Last-session analysis | One `localStorage` slot → `/analysis` |
 | Max OSC/UDP sidecar | Config mirror, clock/notes out, midiin in, Settings + session status strip |
 | `/ws/control` + `/api/max/config` | Browser sees Max link state |
@@ -213,7 +213,7 @@ Snapshot of **what the repo actually does** (August 2026).
 
 | Area | Notes |
 |------|--------|
-| Alto / tenor sax | Triangle oscillator (`engine: 'oscillator'`) |
+| Alto sax SF2 | Juno-style dedicated bank (`GC_Alto_Sax.sf2`); not acoustic |
 | Max starter patch | Config + hello + crude `makenote`/`noteout`; not beat-scheduled, not a real band |
 | Settings “Soloist defaults” / “Local presets” | Still “Soon” |
 | Session / analysis history | Last stop only |
@@ -226,7 +226,6 @@ Snapshot of **what the repo actually does** (August 2026).
 
 - ML / FastAPI soloist or analysis
 - Local SQLite for named presets / analysis history
-- Dedicated sax SF2s
 - Chart text loaders, mic transcription
 - Max as clock master or ML host
 - Multi-player / multi-browser cooperative jam
@@ -242,7 +241,7 @@ Snapshot of **what the repo actually does** (August 2026).
 **Limits you will feel:**
 
 - One analysis slot; refresh-safe only via `localStorage`
-- Sax sounds like a placeholder oscillator
+- Alto sax SF2 is Juno-style, not acoustic
 - Max patch will not sound like a studio band until you build instruments / scheduling in Max
 - Changing setup during a live jam does not rebuild the running session
 - MIDI input is ignored unless the phase is `player_solo`
@@ -272,7 +271,7 @@ Do not stream audio over these sockets. Sound is rendered where you choose (brow
 Product / music:
 
 - Replace procedural soloist (and optionally analysis) with ML behind the existing FastAPI-shaped types
-- Dedicated sax soundfonts; drop oscillator fallback
+- Better acoustic alto sax samples (current bank is Juno-style)
 - Richer Max instruments and **beat-accurate scheduling** of `/jazzgen/soloist/note` and backing notes
 - Chart text import; optional audio transcription for non-MIDI players
 - Multi-chorus analysis review UI

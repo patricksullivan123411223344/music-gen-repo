@@ -16,6 +16,11 @@
   box-sizing: border-box;
 }
 
+.app-main:has(.session-page--split) {
+  max-width: min(2400px, 100%);
+  padding-bottom: 16px;
+}
+
 /* Shared page wrapper */
 
 .page-shell {

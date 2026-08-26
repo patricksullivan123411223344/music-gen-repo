@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { SessionConfig } from '../../types/index.ts';
-import ChordStrip from '../analysis/ChordStrip.tsx';
 import {
   backingInstrumentOptions,
   backingStyleOptions,
@@ -17,6 +16,8 @@ interface SessionSetupPanelProps {
   config: SessionConfig;
   onChange: (config: SessionConfig) => void;
   onStart: () => void;
+  onStop?: () => void;
+  isJamming?: boolean;
   midiDisconnected?: boolean;
   disabled?: boolean;
   statusSlot?: ReactNode;
@@ -26,6 +27,8 @@ export default function SessionSetupPanel({
   config,
   onChange,
   onStart,
+  onStop,
+  isJamming = false,
   midiDisconnected = false,
   disabled = false,
   statusSlot,
@@ -49,8 +52,12 @@ export default function SessionSetupPanel({
   return (
     <section className={`session-setup${disabled ? ' session-setup--disabled' : ''}`}>
       <header className="session-setup__header">
-        <h1>Session</h1>
-        <p>Pick a form, set the feel, then start trading.</p>
+        <h1>Setup</h1>
+        <p>
+          {isJamming
+            ? 'Session running — stop to edit these controls.'
+            : 'Tune, soloist, and band. Start when ready — the stage stays on the right.'}
+        </p>
         {statusSlot}
       </header>
 
@@ -107,12 +114,9 @@ export default function SessionSetupPanel({
             />
           </div>
         </div>
-        <div className="session-chart-hero__strip">
-          <ChordStrip chordChart={config.chordChart} />
-        </div>
       </div>
 
-      <div className="session-setup__grid session-setup__grid--tri">
+      <div className="session-setup__grid">
         <fieldset className="session-field" disabled={disabled}>
           <legend>Tune</legend>
           <p className="session-field__lede">
@@ -250,20 +254,30 @@ export default function SessionSetupPanel({
       </div>
 
       <footer className="session-setup__footer">
-        {midiDisconnected && (
+        {midiDisconnected && !isJamming && (
           <p className="session-setup__midi-hint">
             No MIDI keyboard detected.{' '}
             <Link to="/settings#midi">Connect one in Settings</Link> to record your solos.
           </p>
         )}
-        <button
-          type="button"
-          className="session-button session-button--primary"
-          onClick={onStart}
-          disabled={disabled}
-        >
-          Start session
-        </button>
+        {isJamming ? (
+          <button
+            type="button"
+            className="session-button session-button--danger"
+            onClick={onStop}
+          >
+            Stop session
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="session-button session-button--primary"
+            onClick={onStart}
+            disabled={disabled}
+          >
+            Start session
+          </button>
+        )}
       </footer>
     </section>
   );

@@ -21,18 +21,18 @@ export const SOLO_INSTRUMENT_SOUNDFONTS = {
         engine: 'soundfont',
     },
     alto_sax: {
-        file: '',
+        file: 'GC_Alto_Sax.sf2',
         bank: 0,
         preset: 0,
         label: 'Alto Sax',
-        engine: 'oscillator',
+        engine: 'soundfont',
     },
     tenor_sax: {
-        file: '',
+        file: 'FreePats_Tenor_Sax.sf2',
         bank: 0,
         preset: 0,
         label: 'Tenor Sax',
-        engine: 'oscillator',
+        engine: 'soundfont',
     },
 };
 export const BACKING_INSTRUMENT_SOUNDFONTS = {

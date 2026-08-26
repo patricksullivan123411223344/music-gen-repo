@@ -47,7 +47,6 @@ export default function SessionPage() {
     endSession,
   } = useSession();
 
-  // Prefer server form clock when jamming; fall back to client ticks for smooth UI
   const clock = session?.formClock ?? clientClock;
 
   useEffect(() => {
@@ -91,7 +90,6 @@ export default function SessionPage() {
     const beatMs = 60_000 / config.tempoBpm;
     const interval = window.setInterval(() => {
       setClientClock((prev) => {
-        // If server clock is ahead / authoritative, keep client in soft sync for MIDI timing
         const beatsPerBar = config.chordChart.beatsPerBar;
         const barCount = config.chordChart.barCount;
         const nextBeatInBar = prev.beatInBar >= beatsPerBar ? 1 : prev.beatInBar + 1;
@@ -115,7 +113,6 @@ export default function SessionPage() {
     return () => window.clearInterval(interval);
   }, [isJamming, phase, config.tempoBpm, config.chordChart.beatsPerBar, config.chordChart.barCount]);
 
-  // Soft-follow server clock so bar highlight tracks chorus flips
   useEffect(() => {
     if (session?.formClock && isJamming) {
       setClientClock(session.formClock);
@@ -160,52 +157,43 @@ export default function SessionPage() {
     renderMode === 'sf2' || renderMode === 'max_soloist' || sf2Preview;
 
   return (
-    <main
-      className={`session-page session-page--dashboard${
-        isJamming ? ' session-page--jamming' : ' session-page--idle'
-      }`}
-    >
+    <main className="session-page session-page--split">
       {error && <p className="session-error session-dashboard__error">{error}</p>}
 
-      {!isJamming ? (
-        <div className="session-dashboard__setup">
+      <div className="session-split">
+        <aside className="session-split__rail">
           <SessionSetupPanel
             config={config}
             onChange={setConfig}
             onStart={handleStart}
+            onStop={() => void handleStop()}
+            isJamming={isJamming}
             midiDisconnected={midiDisconnected}
+            disabled={isJamming}
             statusSlot={<MaxStatusStrip envelope={envelope} />}
           />
-        </div>
-      ) : (
-        <section className="session-dashboard__stage session-dashboard__stage--full">
-          <div className="session-jam-strip">
-            <div className="session-jam-strip__meta">
-              <strong>{config.chordChart.title}</strong>
-              <span>{config.tempoBpm} BPM</span>
-              <span>Stop to change setup</span>
-            </div>
-          </div>
+        </aside>
+
+        <section className="session-split__stage">
           <JamStage
             config={config}
-            phase={phase}
-            activePlayer={activePlayer}
+            phase={isJamming ? phase : 'idle'}
+            activePlayer={isJamming ? activePlayer : null}
             clock={clock}
             chorusIndex={session?.currentChorus ?? 0}
             chorusStartMs={chorusStartMs}
-            soloistNotes={soloistNotes}
-            backingParts={backingParts}
-            bandEnergy={bandEnergy}
+            soloistNotes={isJamming ? soloistNotes : null}
+            backingParts={isJamming ? backingParts : null}
+            bandEnergy={isJamming ? bandEnergy : null}
             soundLoading={soundLoading}
             soundError={soundError}
             onSoundError={reportSoundError}
             onMidiNotesComplete={handleMidiNotesComplete}
-            onStop={handleStop}
             playSoloistSf2={playSoloistSf2}
             playBackingSf2={playBackingSf2}
           />
         </section>
-      )}
+      </div>
     </main>
   );
 }
